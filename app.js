@@ -18,7 +18,7 @@ app.use(cp())
  app.use("/api/user" , userRouter)
  app.use("/api/resume" , resumeRouter)
  app.use("/api/ai" , aiResumeRouter)
-
+module.exports = app;
 app.listen(process.env.PORT , () =>{
     console.log("Server running")
 })
