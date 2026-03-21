@@ -5,36 +5,41 @@ const jwt = require("jsonwebtoken")
 
 const registerController = async (req, res) => {
     try {
-
         const { name, username, password } = req.body
 
         if (!name || !username || !password) {
-         return res.status(401).send("Credentials are needed")
-
+            return res.status(400).send("Credentials are needed")
         }
 
-
-        const hash = await bcrypt.hash(password, 10)
-
-        const isUser = await userModel.findOne({
-            username
-        })
-
+        const isUser = await userModel.findOne({ username })
         if (isUser) {
             return res.status(409).send("User already exists")
         }
+
+        const hash = await bcrypt.hash(password, 10)
 
         const registerUser = await userModel.create({
             name,
             username,
             password: hash
         })
-        token = jwt.sign({ userId: registerUser._id }, process.env.JET_SECRET, { expiresIn: "1d" })
-        res.cookie ("token", token)
-        res.status(201).send(registerUser)
 
+        const token = jwt.sign(
+            { userId: registerUser._id },
+            process.env.JET_SECRET,
+            { expiresIn: "1d" }
+        )
+
+        res.cookie("token", token, {
+            httpOnly: true,
+            secure: true,
+            sameSite: "none",
+            maxAge: 24 * 60 * 60 * 1000
+        })
+
+        return res.status(201).send(registerUser)
     } catch (error) {
-        res.status(401).send(error.message)
+        return res.status(500).send(error.message)
     }
 }
 
